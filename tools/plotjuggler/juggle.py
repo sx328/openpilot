@@ -64,7 +64,7 @@ def load_segment(segment_name):
     return []
 
 
-def start_juggler(fn=None, dbc=None, layout=None, route_or_segment_name=None):
+def start_juggler(fn=None, dbc=None, layout=None, route_or_segment_name=None, title=None):
   env = os.environ.copy()
   env["BASEDIR"] = BASEDIR
   env["PATH"] = f"{INSTALL_DIR}:{os.getenv('PATH', '')}"
@@ -72,18 +72,23 @@ def start_juggler(fn=None, dbc=None, layout=None, route_or_segment_name=None):
     env["DBC_NAME"] = dbc
 
   extra_args = ""
+  window_title = None
   if fn is not None:
     extra_args += f" -d {fn}"
   if layout is not None:
     extra_args += f" -l {layout}"
   if route_or_segment_name is not None:
+    window_title = route_or_segment_name
+  if title is not None:
+    window_title = title
+  if window_title is not None
     extra_args += f" --window_title \"{route_or_segment_name}\""
 
   cmd = f'{PLOTJUGGLER_BIN} --buffer_size {MAX_STREAMING_BUFFER_SIZE} --plugin_folders {INSTALL_DIR}{extra_args}'
   subprocess.call(cmd, shell=True, env=env, cwd=juggle_dir)
 
 
-def juggle_route(route_or_segment_name, segment_count, qlog, can, layout, dbc=None, ci=False):
+def juggle_route(route_or_segment_name, segment_count, qlog, can, layout, dbc=None, ci=False, title=None):
   segment_start = 0
   if 'cabana' in route_or_segment_name:
     query = parse_qs(urlparse(route_or_segment_name).query)
@@ -138,7 +143,7 @@ def juggle_route(route_or_segment_name, segment_count, qlog, can, layout, dbc=No
   with tempfile.NamedTemporaryFile(suffix='.rlog', dir=juggle_dir) as tmp:
     save_log(tmp.name, all_data, compress=False)
     del all_data
-    start_juggler(tmp.name, dbc, layout, route_or_segment_name)
+    start_juggler(tmp.name, dbc, layout, route_or_segment_name, title=title)
 
 
 if __name__ == "__main__":
@@ -153,6 +158,7 @@ if __name__ == "__main__":
   parser.add_argument("--layout", nargs='?', help="Run PlotJuggler with a pre-defined layout")
   parser.add_argument("--install", action="store_true", help="Install or update PlotJuggler + plugins")
   parser.add_argument("--dbc", help="Set the DBC name to load for parsing CAN data. If not set, the DBC will be automatically inferred from the logs.")
+  parser.add_argument("--title", nargs='?', help="PlotJuggler window title")
   parser.add_argument("route_or_segment_name", nargs='?', help="The route or segment name to plot (cabana share URL accepted)")
   parser.add_argument("segment_count", type=int, nargs='?', help="The number of segments to plot")
 
@@ -168,7 +174,7 @@ if __name__ == "__main__":
   if not os.path.exists(PLOTJUGGLER_BIN):
     print("PlotJuggler is missing. Downloading...")
     install()
-  
+
   if get_plotjuggler_version() < MINIMUM_PLOTJUGGLER_VERSION:
     print("PlotJuggler is out of date. Installing update...")
     install()
@@ -177,4 +183,4 @@ if __name__ == "__main__":
     start_juggler(layout=args.layout)
   else:
     route_or_segment_name = DEMO_ROUTE if args.demo else args.route_or_segment_name.strip()
-    juggle_route(route_or_segment_name, args.segment_count, args.qlog, args.can, args.layout, args.dbc, args.ci)
+    juggle_route(route_or_segment_name, args.segment_count, args.qlog, args.can, args.layout, args.dbc, args.ci, args.title)
