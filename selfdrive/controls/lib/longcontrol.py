@@ -33,7 +33,7 @@ def long_control_state_trans(CP, active, long_control_state, v_ego, v_target,
     long_control_state = LongCtrlState.off
 
   else:
-    if long_control_state np== LongCtrlState.off:
+    if long_control_state == LongCtrlState.off:
       long_control_state = LongCtrlState.pid
 
     elif long_control_state == LongCtrlState.pid:
@@ -69,17 +69,17 @@ class LongControl:
     """Reset PID controller and change setpoint"""
     self.pid.reset()
     self.v_pid = v_pid
+    self.t = 0.0
 
   def update(self, active, CS, long_plan, accel_limits, t_since_plan):
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
-    # Interp control trajectory
-    
+
     if not active:
       output_accel = 0.
-      t = 0.0
+      self.t = 0.0
     else:
-      t += DT_CTRL
-      output_accel = interp(t, ACCELS_T, ACCELS)
+      self.t += DT_CTRL
+      output_accel = interp(self.t, ACCELS_T, ACCELS)
 
 
     self.last_output_accel = clip(output_accel, accel_limits[0], accel_limits[1])
