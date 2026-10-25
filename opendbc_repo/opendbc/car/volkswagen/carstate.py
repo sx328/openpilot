@@ -98,9 +98,12 @@ class CarState(CarStateBase):
       ret.stockFcw = bool(ext_cp.vl["ACC_10"]["AWV2_Freigabe"])
       ret.stockAeb = bool(ext_cp.vl["ACC_10"]["ANB_Teilbremsung_Freigabe"]) or bool(ext_cp.vl["ACC_10"]["ANB_Zielbremsung_Freigabe"])
 
-      self.acc_type = ext_cp.vl["ACC_06"]["ACC_Typ"]
+      # Non-ACC car (Front Assist radar only, engages on standard cruise): the radar never sends ACC_06, and
+      # reading it would hold CAN invalid. ACC_02 never carries a time gap, which would always read as
+      # cruise control mode (nonAdaptive) and block engagement.
+      self.acc_type = 0
       self.esp_hold_confirmation = bool(pt_cp.vl["ESP_21"]["ESP_Haltebestaetigung"])
-      acc_limiter_mode = ext_cp.vl["ACC_02"]["ACC_Gesetzte_Zeitluecke"] == 0
+      acc_limiter_mode = False
       speed_limiter_mode = bool(pt_cp.vl["TSK_06"]["TSK_Limiter_ausgewaehlt"])
 
       ret.cruiseState.available = pt_cp.vl["TSK_06"]["TSK_Status"] in (2, 3, 4, 5)

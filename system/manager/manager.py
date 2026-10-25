@@ -43,6 +43,11 @@ def manager_init() -> None:
     if default_value is not None and params.get(k) is None:
       params.put(k, default_value)
 
+  # this device is rarely online: without this, failed update checks eventually set Offroad_ConnectivityNeeded,
+  # which blocks going onroad until "Snooze Update" is pressed every drive. set to 0 to re-enable updates.
+  if params.get("DisableUpdates") is None:
+    params.put_bool("DisableUpdates", True)
+
   # Create folders needed for msgq
   try:
     os.mkdir(Paths.shm_path())
